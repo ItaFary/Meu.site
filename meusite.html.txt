@@ -1,0 +1,230 @@
+html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Recursos Humanos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerenciador de Recursos Humanos</h1>
+        <button id="startButton">Iniciar</button>
+    </div>
+    <script>
+        // Funções para gerenciamento de dados
+        const getData = () => JSON.parse(localStorage.getItem('rhData')) || {};
+        const saveData = (data) => localStorage.setItem('rhData', JSON.stringify(data));
+
+        // Inicialização dos dados
+        if (!localStorage.getItem('rhData')) {
+            saveData({
+                faltas: {},
+                ferias: {},
+                doentes: {},
+                autobiografias: {},
+                patentes: {},
+                locais: {},
+                efetivos: [],
+                obidosVisitantes: 0
+            });
+        }
+
+        // Funções de autenticação
+        const getUsers = () => JSON.parse(localStorage.getItem('users')) || {};
+        const saveUsers = (users) => localStorage.setItem('users', JSON.stringify(users));
+
+        const login = () => {
+            const users = getUsers();
+            const username = prompt('Nome de usuário:');
+            const password = prompt('Senha:');
+            
+            if (users[username] && users[username].password === password) {
+                alert('Login bem-sucedido!');
+                return true; // Login bem-sucedido
+            } else {
+                alert('Usuário ou senha incorretos.');
+                return false; // Login falhou
+            }
+        };
+
+        const createAccount = () => {
+            const users = getUsers();
+            const username = prompt('Escolha um nome de usuário:');
+            
+            if (users[username]) {
+                alert('Nome de usuário já existe. Tente outro.');
+                return;
+            }
+
+            const password = prompt('Escolha uma senha:');
+            users[username] = { password: password };
+            saveUsers(users);
+            alert(`Conta criada com sucesso para ${username}!`);
+        };
+
+        // Função principal para gerenciar o bot
+        const main = () => {
+            const option = prompt(`Escolha uma opção:
+            1. Fazer Login
+            2. Criar Conta`);
+
+            switch (option) {
+                case '1':
+                    if (login()) {
+                        showMenu(); // Exibe o menu se o login for bem-sucedido
+                    }
+                    break;
+                case '2':
+                    createAccount();
+                    break;
+                default:
+                    alert('Opção inválida.');
+            }
+        };
+
+        // Função para exibir menu
+        const showMenu = () => {
+            const option = prompt(`Escolha uma opção:
+            1. Registrar Faltas
+            2. Registrar Férias
+            3. Registrar Doença
+            4. Adicionar Autobiografia
+            5. Cadastrar Efetivo
+            6. Ver Efetivos
+            7. Ver Visitantes a Óbidos`);
+
+            switch (option) {
+                case '1':
+                    registerFalta();
+                    break;
+                case '2':
+                    registerFerias();
+                    break;
+                case '3':
+                    registerDoenca();
+                    break;
+                case '4':
+                    addAutobiografia();
+                    break;
+                case '5':
+                    cadastrarEfetivo();
+                    break;
+                case '6':
+                    verEfetivos();
+                    break;
+                case '7':
+                    verObidos();
+                    break;
+                default:
+                    alert('Opção inválida.');
+            }
+        };
+
+        // Função para cadastrar efetivo
+        const cadastrarEfetivo = () => {
+            const nome = prompt('Nome do efetivo:');
+            const posto = prompt('Posto:');
+            const funcao = prompt('Função:');
+            const colocacao = prompt('Colocação:');
+            const sexo = prompt('Sexo (M/F):');
+            const numero = prompt('Número:');
+
+            const cadeias = prompt('Escolha as cadeias onde já trabalhou (separe por vírgulas):\nExemplo: Kakila Calomboloca, CCL, Viana, Outros');
+
+            const data = getData();
+            const efetivo = {
+                nome,
+                posto,
+                funcao,
+                colocacao,
+                sexo,
+                numero,
+                cadeias: cadeias.split(',').map(cadeia => cadeia.trim()) // Cria um array com as cadeias
+            };
+
+            data.efetivos.push(efetivo); // Adiciona o novo efetivo à lista
+            saveData(data);
+            alert(`Efetivo ${nome} cadastrado com sucesso!`);
+        };
+
+        // Funções para gerenciamento de dados
+        const registerFalta = () => {
+            const name = prompt('Nome do funcionário:');
+            const faltas = parseInt(prompt('Número de faltas:'), 10);
+            const data = getData();
+            data.faltas[name] = (data.faltas[name] || 0) + faltas;
+            saveData(data);
+            alert(`Faltas de ${name} registradas: ${data.faltas[name]}`);
+        };
+
+        const registerFerias = () => {
+            const name = prompt('Nome do funcionário:');
+            const data = getData();
+            data.ferias[name] = true;
+            saveData(data);
+            alert(`${name} registrado como de férias.`);
+        };
+
+        const registerDoenca = () => {
+            const name = prompt('Nome do funcionário:');
+            const data = getData();
+            data.doentes[name] = true;
+            saveData(data);
+            alert(`${name} registrado como doente.`);
+        };
+
+        const addAutobiografia = () => {
+            const name = prompt('Nome do funcionário:');
+            const bio = prompt('Autobiografia:');
+            const data = getData();
+            data.autobiografias[name] = bio;
+            saveData(data);
+            alert(`Autobiografia de ${name} registrada.`);
+        };
+
+        const verEfetivos = () => {
+            const data = getData();
+            const efetivosList = data.efetivos.map((efetivo, index) => `${index + 1}. ${efetivo.nome} - ${efetivo.posto}`).join('\n');
+            alert(`Lista de Efetivos:\n${efetivosList}`);
+        };
+
+        const verObidos = () => {
+            const data = getData();
+            alert(`Total de visitantes a Óbidos: ${data.obidosVisitantes}`);
+        };
+
+        // Iniciar o aplicativo ao clicar no botão
+        document.getElementById('startButton').addEventListener('click', main);
+    </script>
+</body>
+</html>
